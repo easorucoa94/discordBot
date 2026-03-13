@@ -4,6 +4,7 @@ from discord.ext import commands
 # Import commands
 from commands.help import helpCommands
 from commands.musicPlayer import musicPlayerCommands
+from commands.soundboard import soundboardCommands
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -18,6 +19,8 @@ async def setup_hook():
     await helpCommands.init(bot)
     # Load music player commands
     await musicPlayerCommands.init(bot)
+    # Load soundboard commands
+    await soundboardCommands.init(bot)
 
 @bot.event
 async def on_ready():
