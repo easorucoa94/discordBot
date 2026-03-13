@@ -9,23 +9,26 @@ class inactivityHelper:
     async def triggerDisconnect(guild):
         await asyncio.sleep(inactivityHelper.INACTIVITY_TIMER_IN_SECONDS)
 
-        vc = guild.voice_client
-        if vc and not vc.is_playing() and not vc.is_paused():
-            await vc.disconnect()
+        voiceClient = guild.voice_client
+        if voiceClient and not voiceClient.is_playing() and not voiceClient.is_paused():
+            await voiceClient.disconnect()
             await guild.text_channels[0].send(f"I'm leaving the channel due to inactivity ({inactivityHelper.INACTIVITY_TIMER_IN_SECONDS} seconds), bye!")
 
     @staticmethod
     def runInactivityTimer(guild):
-        vc = guild.voice_client
-        if not vc:
+        voiceClient = guild.voice_client
+        if not voiceClient:
             return
             
-        loop = vc.client.loop
+        stalkCog = voiceClient.client.get_cog("Stalk Commands")
+        if stalkCog and stalkCog.stalkTarget is not None:
+            inactivityHelper.cancelTimer(guild)
+            return
+            
+        loop = voiceClient.client.loop
         
         def do_schedule():
-            # cancel existing timer
-            if guild.id in disconnect_tasks:
-                disconnect_tasks[guild.id].cancel()
+            inactivityHelper.cancelTimer(guild)
 
             disconnect_tasks[guild.id] = loop.create_task(
                 inactivityHelper.triggerDisconnect(guild)

@@ -7,6 +7,7 @@ class musicPlayerHelper:
             'format': 'bestaudio/best',
             'noplaylist': True,
             'quiet': True,
+            'cookiesfrombrowser': ('chrome',)
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
