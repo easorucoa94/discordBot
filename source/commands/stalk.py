@@ -43,6 +43,10 @@ class stalkCommands(commands.Cog, name="Stalk Commands"):
 
     @commands.command(name="stopStalking")
     async def stopStalking(self, ctx):
-        await ctx.voice_client.disconnect()
+        musicPlayerCog = ctx.bot.get_cog("Music Player")
+        
+        if ctx.voice_client and not musicPlayerCog.currentlyPlaying:
+            await ctx.voice_client.disconnect()
+
         self.stalkTarget = None
         await ctx.send("Stopped stalking.")
