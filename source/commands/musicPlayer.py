@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
+
+# Load helpers
 from helpers.musicPlayerHelper import musicPlayerHelper
+from helpers.inactivityHelper import inactivityHelper
 
 # Passing `name="..."` to commands.Cog changes the category name in the default help
 class musicPlayerCommands(commands.Cog, name="Music Player"):
@@ -9,8 +12,14 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
     async def init(bot):
         await bot.add_cog(musicPlayerCommands(bot))
 
+    def afterPlayingTrigger(self, error):
+        if error:
+            print(f'Player error: {error}')
+        inactivityHelper.runInactivityTimer(self.guild)
+
     @commands.command(name="play")
     async def play(self, ctx, *, videoUrl):
+
         if not ctx.message.author.voice:
             await ctx.send("You are not connected to a voice channel.")
             return
@@ -22,9 +31,15 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
         else:
             await ctx.voice_client.move_to(channel)
 
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        self.guild = ctx.guild
+        inactivityHelper.cancelTimer(self.guild)
+
         videoData = musicPlayerHelper.getVideoByUrl(videoUrl)
         audioStreamUrl = musicPlayerHelper.getAudioStreamUrl(videoData)
         
         playerData = discord.FFmpegPCMAudio(audioStreamUrl, **self.FFMPEG_OPTIONS)
         
-        ctx.voice_client.play(playerData, after=lambda e: print(f'Player error: {e}') if e else None)
+        ctx.voice_client.play(playerData, after=self.afterPlayingTrigger)
