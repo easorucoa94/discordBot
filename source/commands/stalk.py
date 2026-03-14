@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from helpers.inactivityHelper import inactivityHelper
+
 # Passing `name="..."` to commands.Cog changes the category name in the default help
 class stalkCommands(commands.Cog, name="Stalk Commands"):
     stalkTarget = None
@@ -24,9 +26,12 @@ class stalkCommands(commands.Cog, name="Stalk Commands"):
     @commands.command(name="stalk")
     async def stalk(self, ctx, *, stalkTarget):
         stalkTargetMemberObject = discord.utils.get(ctx.guild.members, global_name=stalkTarget)
-        #if stalkTargetMemberObject.id == ctx.message.author.id:
-        #    await ctx.send("You can't stalk yourself.")
-        #    return
+
+        """
+        if stalkTargetMemberObject.id == ctx.message.author.id:
+            await ctx.send("You can't stalk yourself.")
+            return
+        """
 
         if stalkTargetMemberObject and stalkTargetMemberObject.id != self.stalkTarget:
             stalkMessage = f"Now stalking <@{stalkTargetMemberObject.id}>"
@@ -35,7 +40,11 @@ class stalkCommands(commands.Cog, name="Stalk Commands"):
 
             self.stalkTarget = stalkTargetMemberObject.id
             await ctx.send(stalkMessage)
-            await self.stalkMember(stalkTargetMemberObject, stalkTargetMemberObject.voice)
+            if stalkTargetMemberObject.voice is not None:
+                await self.stalkMember(stalkTargetMemberObject, stalkTargetMemberObject.voice)
+            else:
+                inactivityHelper.runInactivityTimer(ctx.guild)
+                
         elif stalkTargetMemberObject and stalkTargetMemberObject.id == self.stalkTarget:
             await ctx.send("Already stalking this user.")
         else:
