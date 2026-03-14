@@ -22,8 +22,10 @@ class inactivityHelper:
             
         stalkCog = voiceClient.client.get_cog("Stalk Commands")
         if stalkCog and stalkCog.stalkTarget is not None:
-            inactivityHelper.cancelTimer(guild)
-            return
+            stalkTargetMember = guild.get_member(stalkCog.stalkTarget)
+            if stalkTargetMember and stalkTargetMember.voice:
+                inactivityHelper.cancelTimer(guild)
+                return
             
         loop = voiceClient.client.loop
         
