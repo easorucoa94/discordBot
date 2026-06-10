@@ -111,37 +111,47 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
 
     @commands.command(name="queue")
     async def queue(self, ctx):
-        queue_str = ""
+        messages = []
         
         current_song = self.currentSong.get(ctx.guild.id)
         if self.currentlyPlaying.get(ctx.guild.id, False) and current_song:
-            title = current_song.get('title', 'Unknown Title')
-            duration = current_song.get('duration', 0)
-            mins, secs = divmod(duration, 60)
-            queue_str += f"**Now Playing:** {title} [{mins}:{secs:02d}]\n\n"
+            messages.append(self.format_metadata(current_song, "**▶️  Now Playing:**"))
 
         queue = self.get_queue(ctx.guild.id)
         if len(queue) == 0:
-            if not queue_str:
+            if not messages:
                 await ctx.send("The queue is currently empty and nothing is playing.")
             else:
-                queue_str += "**Upcoming Queue:**\nThe queue is empty."
-                await ctx.send(queue_str)
+                messages.append("**🎵  Upcoming Queue:**\n```yaml\nThe queue is empty.\n```")
+                await ctx.send("\n".join(messages))
             return
 
-        queue_str += "**Upcoming Queue:**\n"
+        queue_str = "**🎵  Upcoming Queue:**\n```yaml\n"
         for i, videoData in enumerate(queue):
             title = videoData.get('title', 'Unknown Title')
             duration = videoData.get('duration', 0)
             mins, secs = divmod(duration, 60)
-            queue_str += f"{i + 1}. {title} [{mins}:{secs:02d}]\n"
             
-            # Discord has a 2000 character limit per message
-            if len(queue_str) > 1800:
-                queue_str += f"...and {len(queue) - i - 1} more."
+            if len(title) > 60:
+                title = title[:57] + "..."
+                
+            line = f"{i + 1}. {title} [{mins}:{secs:02d}]\n"
+            
+            if len(queue_str) + len(line) > 1900:
+                queue_str += f"...and {len(queue) - i} more.\n"
                 break
+                
+            queue_str += line
 
-        await ctx.send(queue_str)
+        queue_str += "```"
+        messages.append(queue_str)
+
+        final_message = "\n".join(messages)
+        if len(final_message) > 2000:
+            for msg in messages:
+                await ctx.send(msg)
+        else:
+            await ctx.send(final_message)
 
     @commands.command(name="stop")
     async def stop(self, ctx):
