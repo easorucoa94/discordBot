@@ -1,5 +1,9 @@
+import os
+from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+
+load_dotenv()
 
 # Import commands
 from commands.help import helpCommands
@@ -45,11 +49,8 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
-
     # Ensure other commands are processed
     await bot.process_commands(message)
 
 # Run the bot
-bot.run('TOKEN')
+bot.run(os.getenv('DISCORD_TOKEN'))

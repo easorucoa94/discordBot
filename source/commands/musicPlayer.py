@@ -21,24 +21,24 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
     async def init(cls, bot):
         await bot.add_cog(cls(bot))
 
-    def get_queue(self, guild_id):
-        if guild_id not in self.queues:
-            self.queues[guild_id] = deque()
-        return self.queues[guild_id]
+    def get_queue(self, guildId):
+        if guildId not in self.queues:
+            self.queues[guildId] = deque()
+        return self.queues[guildId]
 
-    def format_metadata(self, videoData, prefix="", queue_position=None):
+    def format_metadata(self, videoData, prefix="", queuePosition=None):
         title = videoData.get('title', 'Unknown Title')
         uploader = videoData.get('uploader', videoData.get('artist', 'Unknown Artist'))
         extractor = videoData.get('extractor', 'Unknown Platform')
-        webpage_url = videoData.get('webpage_url', videoData.get('url', 'No Link'))
+        webpageUrl = videoData.get('webpage_url', videoData.get('url', 'No Link'))
         duration = videoData.get('duration', 0)
         
         mins, secs = divmod(duration, 60)
-        duration_str = f"{mins}:{secs:02d}"
+        durationStr = f"{mins}:{secs:02d}"
         
-        position_str = f"\nQueue Position: {queue_position}" if queue_position is not None else ""
+        positionStr = f"\nQueue Position: {queuePosition}" if queuePosition is not None else ""
         
-        return f"{prefix}\n```yaml\nTitle: {title}\nArtist: {uploader}\nPlatform: {extractor}\nDuration: {duration_str}\nLink: {webpage_url}{position_str}\n```"
+        return f"{prefix}\n```yaml\nTitle: {title}\nArtist: {uploader}\nPlatform: {extractor}\nDuration: {durationStr}\nLink: {webpageUrl}{positionStr}\n```"
 
     async def isPlayingSong(self, ctx):
         if self.currentlyPlaying.get(ctx.guild.id, False):
@@ -91,7 +91,7 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
             queue = self.get_queue(ctx.guild.id)
             queue.append(videoData)
             position = len(queue)
-            await ctx.send(self.format_metadata(videoData, "Added to queue:", queue_position=position))
+            await ctx.send(self.format_metadata(videoData, "Added to queue:", queuePosition=position))
             return
         
         playerData = discord.FFmpegPCMAudio(audioStreamUrl, **self.FFMPEG_OPTIONS)
@@ -113,9 +113,9 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
     async def queue(self, ctx):
         messages = []
         
-        current_song = self.currentSong.get(ctx.guild.id)
-        if self.currentlyPlaying.get(ctx.guild.id, False) and current_song:
-            messages.append(self.format_metadata(current_song, "**▶️  Now Playing:**"))
+        currentSong = self.currentSong.get(ctx.guild.id)
+        if self.currentlyPlaying.get(ctx.guild.id, False) and currentSong:
+            messages.append(self.format_metadata(currentSong, "**▶️  Now Playing:**"))
 
         queue = self.get_queue(ctx.guild.id)
         if len(queue) == 0:
@@ -126,7 +126,7 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
                 await ctx.send("\n".join(messages))
             return
 
-        queue_str = "**🎵  Upcoming Queue:**\n```yaml\n"
+        queueStr = "**🎵  Upcoming Queue:**\n```yaml\n"
         for i, videoData in enumerate(queue):
             title = videoData.get('title', 'Unknown Title')
             duration = videoData.get('duration', 0)
@@ -137,21 +137,21 @@ class musicPlayerCommands(commands.Cog, name="Music Player"):
                 
             line = f"{i + 1}. {title} [{mins}:{secs:02d}]\n"
             
-            if len(queue_str) + len(line) > 1900:
-                queue_str += f"...and {len(queue) - i} more.\n"
+            if len(queueStr) + len(line) > 1900:
+                queueStr += f"...and {len(queue) - i} more.\n"
                 break
                 
-            queue_str += line
+            queueStr += line
 
-        queue_str += "```"
-        messages.append(queue_str)
+        queueStr += "```"
+        messages.append(queueStr)
 
-        final_message = "\n".join(messages)
-        if len(final_message) > 2000:
+        finalMessage = "\n".join(messages)
+        if len(finalMessage) > 2000:
             for msg in messages:
                 await ctx.send(msg)
         else:
-            await ctx.send(final_message)
+            await ctx.send(finalMessage)
 
     @commands.command(name="stop")
     async def stop(self, ctx):

@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+# Load helpers
 from helpers.inactivityHelper import inactivityHelper
 
 # Passing `name="..."` to commands.Cog changes the category name in the default help
